@@ -1,0 +1,34 @@
+{
+  "name": "promise",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "example": "example"
+  },
+  "scripts": {
+    "build": "rollup -c -w",
+    "test": "promises-aplus-tests src/core.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Accelerator97/my-promise.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Accelerator97/my-promise/issues"
+  },
+  "homepage": "https://github.com/Accelerator97/my-promise#readme",
+  "dependencies": {
+    "rollup": "^2.68.0",
+    "rollup-plugin-commonjs": "^10.1.0"
+  },
+  "devDependencies": {
+    "promises-aplus-tests": "^2.1.2",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-livereload": "^2.0.5",
+    "rollup-plugin-serve": "^1.1.0"
+  }
+}
