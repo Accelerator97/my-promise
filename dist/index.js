@@ -17,8 +17,8 @@
             this.onRejectedCallbacks = [];  // 存放失败的回调
 
             const resolve = (value) => {
-                if(value instanceof myPromise){ 
-                    return value.then(resolve,reject) 
+                if (value instanceof myPromise) {
+                    return value.then(resolve, reject)
                 }
                 if (this.status === PENDING) {
                     this.value = value;
@@ -67,7 +67,6 @@
 
                 }
                 if (this.status === PENDING) { // 代码是异步调用resolve或者reject 订阅模式
-                    // 不直接push onRejected(this.reason)或者 onFulFilled(this.value)目的是可以加入自己的逻辑
                     this.onRejectedCallbacks.push(() => {
                         // do something
                         setTimeout(() => {
@@ -96,6 +95,75 @@
 
             });
             return promise2
+        }
+
+        static resolve(value) {
+            return new myPromise((resolve, reject) => {
+                resolve(value);
+            })
+        }
+
+        static reject(reason) {
+            return new myPromise((resolve, reject) => {
+                reject(reason);
+            })
+        }
+        static all(promises) {
+            return new myPromise((resolve, reject) => {
+                let res = [];
+                let times = 0; // 计算成功的个数
+
+                const handleSuccess = (index, val) => {
+                    res[index] = val;
+                    if(++times === promises.length){
+                        resolve(res);
+                    }
+                };
+
+                for (let i = 0; i < promises.length; i++) {
+                    // 判断是否是promises,如果是调用then方法获取结果
+                    let p = promises[i];
+                    if (p && typeof p.then === 'function') {
+                        p.then((data) => {
+                            handleSuccess(i,data);
+                        }, reject); // 如果某一个promise失败了 直接走失败即可
+                    }else {
+                        // 如果不是promise，直接把坐标和数据传入
+                        handleSuccess(i,p); 
+                    }
+                }
+            })
+        }
+
+        static race(promises){
+            return new myPromise((resolve,reject)=>{
+                for(let i = 0 ; i < promises.length ; i++){
+                    let p = promises[i];
+                    if(p && typeof p.then === 'function'){
+                        p.then(resolve,reject); // 一旦成功就直接 停止
+                    }else {
+                        resolve(p);
+                    }
+                }
+            })
+        }
+        
+        catch(errFn) {
+            return this.then(null, errFn)
+        }
+        finally(cb){
+            // 这个data是上一次成功的结果
+            return this.then((data)=>{
+                // 如果cb返回的是一个promise，要等待这个promise执行完毕，所以用resolve方法包裹
+                // 并且把上一次成功的结果往下传递
+                // 并没有把cb执行完成功的结果n往下传递 
+                return myPromise.resolve(cb()).then(()=>data)
+            },(err)=>{
+                // 上一个失败的结果往下传递
+                // 如果cb返回的是一个promise，如果这个promise状态为失败，就不会走then方法向外抛出上一个失败的结果
+                // 而是直接reject，后面的catch或者下一个then的失败回调会捕获到这个错误
+                return myPromise.resolve(cb()).then(()=>{throw err})
+            })
         }
     }
 
@@ -139,9 +207,10 @@
             dfd.resolve = resolve;
             dfd.reject = reject;
         });
-
         return dfd
     };
+
+
 
     var core = myPromise;
 

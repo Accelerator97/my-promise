@@ -42,13 +42,79 @@
         //         console.log('err',err)
         //     }
         // )
-        new myPromise((resolve,reject)=>{
-            resolve(new myPromise((resolve,reject)=>{
-                resolve(100)
-            }))
-        }).then(data=>{
-            console.log(data)
+        // new myPromise((resolve,reject)=>{
+        //     resolve(new myPromise((resolve,reject)=>{
+        //         resolve(100)
+        //     }))
+        // }).then(data=>{
+        //     console.log(data)
+        // })
+        // myPromise.reject(new myPromise((resolve, reject) => {
+        //     setTimeout(() => {
+        //         resolve(1000)
+        //     }, 1000);
+        // })).then(data => {
+        //     console.log(data)
+        // }, err => {
+        //     console.log('err', err)
+        // })
+
+        myPromise.race([new myPromise((resolve,reject)=>{
+            setTimeout(() => {
+                resolve('1')
+            }, 10000);
+        }),new myPromise((resolve,reject)=>{
+            setTimeout(() => {
+                resolve('2')
+            }, 2000);
+        })]).then(data=>{
+            console .log(data)
+        },err=>{
+            console.log('err',err)
         })
+         
+        // 自己构造一个promise，暴露一个中断方法
+        function wrap(p1){
+            let abort // 把abort暴露出去，用户可以调用abort把p的状态改为reject，等价于p2失败
+            let p = new Promise((resolve,reject)=>{
+                abort = reject
+            })
+            let p2 =  Promise.race([p1,p])
+            p2.abort = abort
+            return p2
+        }
+
+        let p1 = new myPromise((resolve,reject)=>{
+            setTimeout(() => {
+                reject('失败')
+            }, 3000);
+        }).finally((data)=>{
+            console.log('finally',data)
+            // finally return一个promise 不采用这个promise成功的结果，=
+            return new myPromise((resolve,reject)=>{
+                setTimeout(() => {
+                    resolve(1000)
+                }, 1000);
+            })
+        }).then(data=>{
+            console.log('data',data)
+        }).catch(e=>{
+            console.log('catch',e)
+        })
+ 
+
+        function promisify(readFile){
+            return function(...args){
+                return new Promise((reslove,reject)=>{
+                    readFile(...args,(err,data)=>{
+                        if(err)reject(err)
+                        reslove(data)
+                    })
+                })
+            }
+        }
+ 
+
     </script>
 </body>
 
